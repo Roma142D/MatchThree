@@ -11,6 +11,8 @@ namespace RomanDoliba.Board
     public sealed class Board : MonoBehaviour
     {
         public static Board Instance {get; private set;}
+        [SerializeField] private AudioClip _popSound;
+        [SerializeField] private AudioSource _audioSource;
         [SerializeField] private Row[] _rows;
         public Tile[,] Tiles {get; private set;}
         public int Width => Tiles.GetLength(dimension:0);
@@ -48,22 +50,41 @@ namespace RomanDoliba.Board
         
         public async void Select(Tile tile)
         {
-            if (!_selection.Contains(tile)) _selection.Add(tile);
+            var goToOriginColor = DOTween.Sequence();
+            var highlightSequence = DOTween.Sequence();
+            
+            
+            highlightSequence.Join(tile.icon.DOColor(Color.red, TweenDuration));
+                            
+            if (!_selection.Contains(tile))
+            {
+                if (_selection.Count > 0)
+                {
+                    if(Array.IndexOf(_selection[0].Neighbours, tile) != -1) _selection.Add(tile);  
+                    goToOriginColor.Join(_selection[0].icon.DOColor(Color.white, TweenDuration));
+                }
+                else
+                {
+                    _selection.Add(tile);      
+                    
+                    highlightSequence.Play().Complete();
+                }
+            } 
             
             if (_selection.Count < 2) return;
             
             await Swap(_selection[0], _selection[1]);
+            goToOriginColor.Play().Complete();
 
             if (CanPop())
             {
-                Debug.Log("CanPop");
                 Pop();
             }
             else
             {
                 await Swap(_selection[0], _selection[1]);
             }
-
+            
             _selection.Clear();
         }
         public async Task Swap(Tile tile1, Tile tile2)
@@ -121,6 +142,9 @@ namespace RomanDoliba.Board
                         deflateSequence.Join(connectedTile.icon.transform.DOScale(Vector3.zero, TweenDuration));
                     }
 
+                    _audioSource.PlayOneShot(_popSound);
+                    ScoreCounter.Instance.Score += tile.Item.Value * connectedTiles.Count;
+
                     await deflateSequence.Play().AsyncWaitForCompletion();
 
                     var inflateSequence = DOTween.Sequence();
@@ -133,6 +157,9 @@ namespace RomanDoliba.Board
                     }
 
                     await inflateSequence.Play().AsyncWaitForCompletion();
+
+                    x = 0;
+                    y = 0;
                 }
             }
         }

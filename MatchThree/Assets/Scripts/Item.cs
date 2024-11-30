@@ -7,5 +7,6 @@ namespace RomanDoliba.Board
         [SerializeField] private Sprite _sprite;
         [SerializeField] private int _value;
         public Sprite Sprite => _sprite;
+        public int Value => _value;
     }
 }
