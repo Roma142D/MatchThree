@@ -72,3 +72,4 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 MatchThree/Library/PackageCache/com.unity.burst@1.8.16/.Runtime/libburst-llvm-16.dylib
 /MatchThree/Library
+/MatchThree/Library
